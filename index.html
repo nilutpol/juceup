@@ -1,0 +1,142 @@
+<html>
+
+<head>
+    <!--Import jQuery before materialize.js-->
+    <!-- <script type="text/javascript" src="js/jquery-2.1.4.js"></script> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
+    <!-- <link type="text/css " rel="stylesheet" href="libs/animate.css"> -->
+
+    <!-- <script type="text/javascript" src="libs/moment.js"></script> -->
+
+    <script type="text/javascript">
+        // Declare global variables here
+        var ws;
+
+        $(document).ready(function () {
+            initialise();
+        });
+
+        function initialise() {
+            var host = window.location.host;
+
+            ws = new WebSocket("ws://" + host + "/ws");
+            ws.onopen = function (evt) {
+                console.log('Websocket opened.')
+            }
+
+            ws.onmessage = function (evt) {
+                parse_messages(evt.data);
+            };
+            //$('select').material_select();
+        }
+
+        function parse_messages(data) {
+            let obj = JSON.parse(data)
+            //console.log(obj)
+
+            switch (obj.msg_type) {
+                case 'status':
+                    $.each(obj.data, function (key, device) {
+                        if($('#div_devices #div_device_'+device.imei).length == 0) {
+                            $('#div_devices').append('<div class="col s6" id="div_device_'+device.imei+'"><blockquote><h5>'+device.imei+'</h5></blockquote>')
+                        }
+                        if(device.status != undefined && device.status.slots != undefined) {
+                            $.each(device.status.slots, function (key, item) {
+                                let div;
+                                if($('#div_device_'+device.imei+' img').length < 6) {
+                                    div = $('#div_device_'+device.imei).append('<img id="battery_'+item.id+'" alt="Battery 0%" height="84" width="84">').
+                                    append('<img id="battery_'+item.id+'_lock" src="images/locked.svg" alt="Unlock" height="21" width="21" onclick="unlock('+device.imei+','+item.id+','+item.dev_id+')">')
+                                } else {
+                                    div = $('#div_device_'+device.imei)
+                                }
+                                let img = div.find('#battery_'+item.id)
+                                img.attr("src", "images/battery_" + (item.state == "FU" ? "4" : "0") + ".svg")
+                                img.attr("imei", device.imei)
+                                img.attr("slot_no", item.id)
+                                img.attr("dev_id", item.dev_id)
+                            })
+                        }
+                            /*<!-- <div class="col s6">
+                                <img id="battery_1" src="images/battery_0.svg" alt="Battery 0%" height="84" width="84">
+                                <img id="battery_1_lock" src="images/locked.svg" alt="Unlock" height="21" width="21" onclick="unlock(1)">
+                                <img id="battery_2" src="images/battery_0.svg" alt="Battery 0%" height="84" width="84">
+                                <img id="battery_1_lock" src="images/locked.svg" alt="Unlock" height="21" width="21" onclick="unlock(2)">
+                                <img id="battery_3" src="images/battery_0.svg" alt="Battery 0%" height="84" width="84">
+                                <img id="battery_1_lock" src="images/locked.svg" alt="Unlock" height="21" width="21" onclick="unlock(3)">
+                            </div> */
+                        /*if (device.status && device.status.slots && device.status.slots instanceof Array) {
+                            $.each(device.status.slots, function (key, item) {
+                                $('#battery_' + item.id).attr("src", "images/battery_" + (item.state == "FU" ? "4" : "0") + ".svg")
+                                $('#battery_' + item.id).attr("imei", device.imei)
+                                $('#battery_' + item.id).attr("slot_no", item.id)
+                                $('#battery_' + item.id).attr("dev_id", item.dev_id)
+                            })
+                        }*/
+                        //$('#div_devices').append('</div>')
+                    })
+                    break
+                case 'message':
+                    $('#div_messages').append('<div>' + obj.data + '</div>')
+
+                    if (obj.data.includes('released')) {
+                        $('#battery_' + item.id + '_lock').attr("src", "images/unlocked.svg")
+                    } else if (obj.data.includes('returned')) {
+                        $('#battery_' + item.id + '_lock').attr("src", "images/locked.svg")
+                    }
+                    break
+            }
+        }
+
+        function lock(slot) {
+            let cmd = {}
+            cmd.cmd = 'lock'
+            cmd.imei = $('#battery_' + slot).attr('imei')
+            cmd.slot_no = $('#battery_' + slot).attr('slot_no')
+            cmd.dev_id = $('#battery_' + slot).attr('dev_id')
+            ws.send(JSON.stringify(cmd))
+        }
+
+        function unlock(imei, slot, dev_id) {
+            let cmd = {}
+            cmd.cmd = 'unlock'
+            cmd.imei = imei
+            cmd.slot_no = slot
+            cmd.dev_id = dev_id
+            ws.send(JSON.stringify(cmd))
+        }
+    </script>
+</head>
+
+<body>
+    <main>
+        <div class="row" id="div_main">
+            <div class="col s12">
+                <blockquote>
+                    <h5>Battery Bank Information</h5>
+                </blockquote>
+                <div class="row">
+                    <div class="col s12">
+                        <div class="row" id="div_devices">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s12">
+                        <blockquote>
+                            <h5>Messages</h5>
+                        </blockquote>
+                        <div id="div_messages">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
