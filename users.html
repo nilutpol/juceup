@@ -29,7 +29,6 @@
     <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9"
         crossorigin="anonymous"></script>
 
-
 </head>
 
 <body>
@@ -40,7 +39,7 @@
 
         function intialise() {
             $('#div_navigation').load("navigation.html", function () {
-                $('#li_index').addClass('active_now');
+                $('#li_users').addClass('active_now');
             });
 
             $.get('http://juceup.in:9000/api/get_inventory', function (data) {
@@ -65,7 +64,6 @@
     </script>
     <div class="wrapper">
         <div id="div_navigation"></div>
-
         <!-- Page Content Holder -->
         <div id="content">
             <nav class="navbar navbar-default">
@@ -73,16 +71,14 @@
 
                     <table class="table table-hover" id="table_inventory">
                         <thead class="thead-light">
-                            <tr>
-                                <td>Serial no.</td>
-                                <td>IMEI No.</td>
-                                <td>Address</td>
-                                <td>Locality</td>
-                                <td>Lat/Lng</td>
-                            </tr>
-                            </th>
-                            <tbody>
-                            </tbody>
+                            <th>Serial no.</th>
+                            <th>IMEI No.</th>
+                            <th>Address</th>
+                            <th>Locality</th>
+                            <th>Lat/Lng</th>
+                        </thead>
+                        <tbody>
+                        </tbody>
                     </table>
                 </div>
             </nav>

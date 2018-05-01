@@ -13,8 +13,10 @@ const express = require('express');
 const http = require('http');
 const url = require('url');
 const WebSocket = require('ws');
+var cors = require('cors')
 
 const app = express()
+app.use(cors())
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -24,78 +26,122 @@ app.get("/", function (req, res) {
     res.sendFile(__dirname + '/index.html')
 })
 
+app.get('/api/login', function(req, res) {
+    console.log('GET: ' + JSON.stringify(req.query))
+
+    let reply = {}
+
+    if(req.query.mobile_no == undefined || req.query.fcm_token == undefined) {
+        reply.status = 'failure'
+        reply.msg = 'invalid parameters'
+    } else if (req.query.mobile_no != 12345678) {
+        reply.mobile_no = req.query.mobile_no
+        reply.status = 'failure'
+        reply.msg = 'mobile number not registered.'
+    } else {
+        reply.mobile_no = req.query.mobile_no
+        reply.status = 'success'
+        reply.state = 'not_borrowed'
+        reply.msg = 'successfully logged in.'
+    }
+    res.json(reply);
+})
+
 app.get('/api/get_locations', function (req, res) {
     console.log('GET: ' + JSON.stringify(req.query))
-    let reply = []
+    let reply = {}
 
-    let item = {};
-    item.location_name = 'palm grove enclave, guwahati'
-    item.location = {}
-    item.location.lat = 26.134605
-    item.location.lng = 91.818343
-    item.status = 'available'
-    item.station_count = 3
-    item.battery_count = 9
-    reply.push(item)
+    if(req.query.mobile_no == undefined || req.query.latitude == undefined || req.query.longitude ==  undefined) {
+        reply.status = 'failure'
+        reply.msg = 'invalid parameters'
+    } else if (req.query.mobile_no != 12345678) {
+        reply.mobile_no = req.query.mobile_no
+        reply.status = 'failure'
+        reply.msg = 'mobile number not registered.'
+    } else {
+        reply.status = 'success'
+        reply.msg = 'locations list'
+        reply.mobile_no = req.query.mobile_no
+        reply.data = []
 
-    item = {};
-    item.location_name = 'down town hospital, guwahati'
-    item.location = {}
-    item.location.lat = 26.138794
-    item.location.lng = 91.799657
-    item.status = 'available'
-    item.station_count = 4
-    item.battery_count = 10
-    reply.push(item)
+        let item = {};
+        item.name = 'palm grove enclave, guwahati'
+        item.address = 'palm grove enclave, guwahati'
+        item.locality = 'palm grove enclave, guwahati'
+        item.latitude = 26.134605
+        item.longitude = 91.818343
+        item.status = 'available'
+        item.station_count = 3
+        item.battery_count = 9
+        reply.data.push(item)
 
-    item = {};
-    item.location_name = 'big bazar, guwahati'
-    item.location = {}
-    item.location.lat = 26.165825
-    item.location.lng = 91.768306
-    item.status = 'low'
-    item.station_count = 1
-    item.battery_count = 1
-    reply.push(item)
+        item = {};
+        item.name = 'down town hospital, guwahati'
+        item.address = 'down town hospital, guwahati'
+        item.locality = 'down town hospital, guwahati'
+        item.latitude = 26.138794
+        item.longitude = 91.799657
+        item.status = 'available'
+        item.station_count = 4
+        item.battery_count = 10
+        reply.data.push(item)
 
-    item = {};
-    item.location_name = 'zoo, guwahati'
-    item.location = {}
-    item.location.lat = 26.163519
-    item.location.lng = 91.780725
-    item.status = 'low'
-    item.station_count = 2
-    item.battery_count = 2
-    reply.push(item)
+        item = {};
+        item.name = 'big bazar, guwahati'
+        item.address = 'big bazar, guwahati'
+        item.locality = 'big bazar, guwahati'
+        item.latitude = 26.165825
+        item.longitude = 91.768306
+        item.status = 'low'
+        item.station_count = 1
+        item.battery_count = 1
+        reply.data.push(item)
 
-    item = {};
-    item.location_name = 'commerce college, guwahati'
-    item.location = {}
-    item.location.lat = 26.180078
-    item.location.lng = 91.775640
-    item.status = 'not available'
-    item.station_count = 5
-    item.battery_count = 0
-    reply.push(item)
+        item = {};
+        item.name = 'zoo, guwahati'
+        item.address = 'zoo, guwahati'
+        item.locality = 'zoo, guwahati'
+        item.latitude = 26.163519
+        item.longitude = 91.780725
+        item.status = 'low'
+        item.station_count = 2
+        item.battery_count = 2
+        reply.data.push(item)
+
+        item = {};
+        item.name = 'commerce college, guwahati'
+        item.address = 'commerce college, guwahati'
+        item.locality = 'commerce college, guwahati'
+        item.latitude = 26.180078
+        item.longitude = 91.775640
+        item.status = 'not available'
+        item.station_count = 5
+        item.battery_count = 0
+        reply.data.push(item)
+    }
 
     res.json(reply)
 })
 
 app.get('/api/get_inventory', function (req, res) {
     console.log('GET: ' + JSON.stringify(req.query))
-    let reply = []
+    let reply = {}
 
+    reply.status = 'success'
+
+    reply.data = []
     let item = {};
     item.imei = 2201700122
     item.slots = []
     item.slots.push({ status: 'F', devid: '3201701006' })
     item.slots.push({ status: 'F', devid: '3201701007' })
     item.slots.push({ status: 'F', devid: '3201701008' })
-    item.location_name = 'palm grove enclave, guwahati'
-    item.location = {}
-    item.location.lat = 26.134605
-    item.location.lng = 91.818343
-    reply.push(item)
+    item.name = 'palm grove enclave, guwahati'
+    item.address = 'palm grove enclave, guwahati'
+    item.locality = 'palm grove enclave, guwahati'
+    item.latitude = 26.134605
+    item.longitude = 91.818343
+    reply.data.push(item)
 
     item = {};
     item.imei = 22017001123
@@ -103,11 +149,12 @@ app.get('/api/get_inventory', function (req, res) {
     item.slots.push({ status: 'F', devid: '3201701008' })
     item.slots.push({ status: 'NF', devid: '3201701001' })
     item.slots.push({ status: 'F', devid: '3201701002' })
-    item.location_name = 'down town hospital, guwahati'
-    item.location = {}
-    item.location.lat = 26.138794
-    item.location.lng = 91.799657
-    reply.push(item)
+    item.name = 'down town hospital, guwahati'
+    item.address = 'down town hospital, guwahati'
+    item.locality = 'down town hospital, guwahati'
+    item.latitude = 26.138794
+    item.longitude = 91.799657
+    reply.data.push(item)
 
     item = {};
     item.imei = 2201700114
@@ -115,11 +162,12 @@ app.get('/api/get_inventory', function (req, res) {
     item.slots.push({ status: 'F', devid: '3201701003' })
     item.slots.push({ status: 'NF', devid: '3201701004' })
     item.slots.push({ status: 'NF', devid: '3201701005' })
-    item.location_name = 'big bazar, guwahati'
-    item.location = {}
-    item.location.lat = 26.165825
-    item.location.lng = 91.768306
-    reply.push(item)
+    item.name = 'big bazar, guwahati'
+    item.address = 'big bazar, guwahati'
+    item.locality = 'big bazar, guwahati'
+    item.latitude = 26.165825
+    item.longitude = 91.768306
+    reply.data.push(item)
 
     item = {};
     item.imei = 2201700115
@@ -127,11 +175,12 @@ app.get('/api/get_inventory', function (req, res) {
     item.slots.push({ status: 'EM', devid: '3201701016' })
     item.slots.push({ status: 'EM', devid: '3201701017' })
     item.slots.push({ status: 'F', devid: '3201701018' })
-    item.location_name = 'zoo, guwahati'
-    item.location = {}
-    item.location.lat = 26.163519
-    item.location.lng = 91.780725
-    reply.push(item)
+    item.name = 'zoo, guwahati'
+    item.address = 'zoo, guwahati'
+    item.locality = 'zoo, guwahati'
+    item.latitude = 26.163519
+    item.longitude = 91.780725
+    reply.data.push(item)
 
     item = {};
     item.imei = 2201700116
@@ -139,11 +188,12 @@ app.get('/api/get_inventory', function (req, res) {
     item.slots.push({ status: 'F', devid: '3201701006' })
     item.slots.push({ status: 'NF', devid: '3201701007' })
     item.slots.push({ status: 'ER', devid: '3201701008' })
-    item.location_name = 'commerce college, guwahati'
-    item.location = {}
-    item.location.lat = 26.180078
-    item.location.lng = 91.775640
-    reply.push(item)
+    item.name = 'commerce college, guwahati'
+    item.address = 'commerce college, guwahati'
+    item.locality = 'commerce college, guwahati'
+    item.latitude = 26.180078
+    item.longitude = 91.775640
+    reply.data.push(item)
 
     for (key in g_devices) {
         let device = g_devices[key]
@@ -152,26 +202,40 @@ app.get('/api/get_inventory', function (req, res) {
         item.imei = device.imei
         item.slots = device.status.slots;
 
-        item.location_name = 'commerce college, guwahati'
-        item.location = {}
-        item.location.lat = 26.180078
-        item.location.lng = 91.775640
-        reply.push(item)
+        item.name = 'commerce college, guwahati'
+        item.address = 'commerce college, guwahati'
+        item.locality = 'commerce college, guwahati'
+        item.latitude = 26.180078
+        item.longitude = 91.775640
+        reply.data.push(item)
     }
 
     res.json(reply)
 })
 
 app.get('/api/request_bank', function (req, res) {
-    release_bank(req.query.imei)
+    let reply = {}
 
-    let reply = []
-
-    let item = new Object()
-    item.imei = req.query.imei
-    item.status = 'OK'
-
-    reply.push(item)
+    if(req.query.mobile_no == undefined || req.query.imei == undefined) {
+        reply.status = 'failure'
+        reply.msg = 'invalid parameters'
+    } else if (req.query.mobile_no != 12345678) {
+        reply.mobile_no = req.query.mobile_no
+        reply.imei = req.query.imei
+        reply.status = 'failure'
+        reply.msg = 'mobile number not registered.'
+    } else if (req.query.imei != 2201700112) {
+        reply.mobile_no = req.query.mobile_no
+        reply.imei = req.query.imei
+        reply.status = 'failure'
+        reply.msg = 'device not found.'
+    } else {
+        release_bank(req.query.imei)
+        reply.mobile_no = req.query.mobile_no
+        reply.imei = req.query.imei
+        reply.status = 'OK'
+        reply.msg = 'Battery released successfully'
+    }
 
     res.json(reply)
 })
@@ -419,7 +483,11 @@ function send_to_clients(msg_type, data) {
 }
 
 function release_bank(imei) {
-    console.log("Received release command for " + imei)
+    let msg = 'Received release command for ' + imei
+    console.log(msg)
+    send_to_clients('message', msg)
+    
+    let battery_released = false;
 
     if (g_devices[imei] != undefined) {
         let device = g_devices[imei]
@@ -430,13 +498,24 @@ function release_bank(imei) {
                 console.log(slot)
                 if (slot.state == "FU") {
                     send_command(imei, 'CC', 'BW.' + slot.id + '.' + slot.dev_id)
+                    battery_released = true
                     break
                 }
             }
         } else {
-            console.log("Status not available for " + imei)
+            let msg = 'Status not available for ' + imei
+            console.log(msg)
+            send_to_clients('message', msg)
         }
     } else {
-        console.log("Device not available: " + imei)
+        let msg = 'Device not available: ' + imei
+        console.log(msg)
+        send_to_clients('message', msg)
+    }
+
+    if(!battery_released) {
+        let msg = 'Battery not released. No Full Battery Bank available.'
+        console.log(msg)
+        send_to_clients('message', msg)
     }
 }
